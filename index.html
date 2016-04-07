@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+ <style> path { 
+	stroke: steelblue;
+	stroke-width: 2;
+	fill: none;
+}
+.axis path,
+.axis line {
+	fill: none;
+	stroke: grey;
+	stroke-width: 1;
+	shape-rendering: crispEdges;
+}
+div.tooltip {
+  position: absolute;	
+  text-align: center;	
+  width: 120px;	
+	
+  padding: 2px;	
+  font: 12px sans-serif;	
+  background: lightsteelblue;	
+  border: 0px;					
+  border-radius: 8px;
+	
+}
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+  <script type=
+    "text/javascript" src="http://d3js.org/d3.v3.min.js">
+</script>
+	<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700">
+	<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900,900italic">
+
+
+</head>
+
+    
+    <body>    
+  <script>
+ var svg = d3.select("body").append("svg").attr("height", 1000);
+ d3.json("genes.json.txt", function(error, json) {
+    if (error) return console.warn(error);
+    //console.log(json);
+    svg.attr("width", function (d) {
+      return d3.max(json, function(d) {
+        return d.genomelength/10;
+      })
+    });
+    // Define the div for the tooltip
+    var div = d3.select("body")
+    	.data(json)
+    	.enter()
+    	.append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0);
+    var phage = svg.selectAll(".genomes")
+      .data(json)
+      .enter()
+      .append("g");
+    phage.attr("transform", function(d, i) { return "translate(0," + (100 + (i*225)) + ")"; });
+    phage.append("rect") // background for ruler
+      .attr({x: 0, y: 0, width: function(d) { return d.genomelength/10; }, height: 30})
+      .style({"stroke-width": "2px", "fill": "white", "stroke": "black"})
+      .attr("stroke-opacity", 0)
+      .transition().duration(1000)
+      .attr("stroke-opacity", 1);
+    var group = phage.selectAll(".thousandticks")
+      .data(function (d) {
+          ticks = [];
+          genome_positions = d3.range(d.genomelength);
+          genome_positions.forEach(function (currentValue, index, myArray) {
+            if (currentValue % 1000 === 0) {
+              ticks.push(currentValue);
+            }
+          });
+          return ticks;
+        }
+      )
+      .enter()
+      .append("g");
+    group.append("rect")
+      .style({"fill": "black"})
+      //.attr({x: 0, y: 100, width: "1px", height: 30})
+      .attr({x: function (d) { return d/10; }, y: 0, width: "1px", height: 30})
+      .attr({"fill-opacity": 0})
+      .transition().duration(1500)
+      .attr({"fill-opacity": 1});
+    //.attr("transform", function (d) { return "translate(" + d/10 + ",0)"; });
+    group.append("text") // kbp label
+      .attr("x", function(d) {return (d/10) + 3;})
+      .attr("y", 12)
+      .attr("font-family", "sans-serif")
+      .attr("font-size", "14px")
+      .attr("fill", "#32CD32")
+      .style("text-anchor", "start")
+      .text(function(d) { return d/1000; })
+      .attr({"fill-opacity": 0})
+      .transition().duration(1500)
+      .attr({"fill-opacity": 1});
+    var group2 = phage.selectAll(".fivehundredticks")
+      .data(function (d) {
+        ticks = [];
+        genome_positions = d3.range(d.genomelength);
+        genome_positions.forEach(function (currentValue, index, myArray) {
+          if (currentValue % 500 === 0 & currentValue % 1000 !== 0) {
+            ticks.push(currentValue);
+          }
+        })
+        return ticks;
+      })
+      .enter()
+      .append("g");
+    group2.append("rect")
+      .style({"fill": "black"})
+      .attr({x: function(d) {return d/10;}, y: 0, width: "1px", height: 15})
+      .attr({"fill-opacity": 0})
+      .transition().duration(1500)
+      .attr({"fill-opacity": 1});
+    //.attr("transform", function (d) { return "translate(" + d/10 + ",0)"; });
+    var group3 = phage.selectAll(".onehundredticks")
+      .data(function (d) {
+        ticks = [];
+        genome_positions = d3.range(d.genomelength);
+        genome_positions.forEach(function (currentValue, index, myArray) {
+          if (currentValue % 100 === 0 & currentValue % 1000 !== 0 & currentValue % 500 !== 0) {
+            ticks.push(currentValue);
+          }
+        })
+        return ticks;
+      })
+      .enter()
+      .append("g");
+    group3.append("rect")
+      .style({"fill": "black"})
+      .attr({x: function (d) { return d/10; }, y: 15, width: "1px", height: 15})
+      .attr("fill-opacity", 0)
+      .transition().duration(1500)
+      .attr("fill-opacity", 1);
+    gene = phage.selectAll(".genes")
+      .data(function(d, i) { console.log(i, d); return d.genes;})
+      .enter()
+      .append("g");
+      gene.data(json)
+      .append("rect")
+      .on("click", function(d) {		
+            div.transition()
+            .data(json)
+				.duration(500)	
+				.style("opacity", 0);
+			div.transition()
+				.duration(200)	
+				.style("opacity", .9);	
+			div.html(function(d){
+        var arrPrint = [];
+        for(i=0;i<(d.sequence.length)/15;i++){
+          arrPrint.push(d.sequence.substring(i*15,(i+1)*15));
+          
+        }
+      	console.log(arrPrint);
+      })
+				.style("left", (d3.event.pageX) + "px")			 
+				.style("top", (d3.event.pageY - 28) + "px")
+        .attr("y", 10)
+      	.attr("height", "28px")
+      	
+			})
+      .attr("y", function (d) {
+        if (d.direction == "forward") {
+          if (d.name % 2 === 0) {
+            return  -70;
+          }
+          else { return -30;}
+        }
+        else if (d.direction == "reverse") {
+          if (d.name % 2 === 0) {
+            return 30;
+          }
+          else { return 60;}
+        }
+      })
+      .attr("x", function (d) {
+        if (d.direction === "forward") {
+          return (0 - ((d.stop-d.start)/10)) - 2;
+        }
+        else if (d.direction === "reverse") {
+          w = d3.select("svg").style("width");
+          return w;
+        }
+      })
+      .attr("height", function (d) {return 30;})
+      .attr("width", function (d) { return (d.stop-d.start)/10; })
+      .style({"stroke":"black", "stroke-width": "2px"})
+      .attr("fill", function (d) {
+        if (d.direction == "forward") {
+          return "#32CD32";
+        }
+        else if (d.direction == "reverse") {
+          return "#d410CC";
+        }
+        else {
+          return "black";
+        }
+      })
+    
+ 
+      .transition().delay(1000).duration(1500)
+      .attr("x", function (d) { return d.start/10; });
+      gene.append("text") // gene name
+      .attr("x", function(d) { return ((d.start + d.stop)/2)/10;})
+      .attr("y", function (d) {
+        if (d.direction == "forward") {
+          if (d.name % 2 === 0) { // forward and even
+            return -50;
+          }
+          else { return -10;} // forward and odd
+        }
+        else if (d.direction == "reverse") {
+          if (d.name % 2 === 0) { // reverse and even
+            return 50;
+          }
+          else { return 80;} //reverse and odd
+        }
+      })
+      .style({"text-anchor": "middle", "fill": "black"})
+      .attr("font-family", "sans-serif")
+      .text(function(d) {return d.name})
+      .attr("fill-opacity", 0)
+      .transition().delay(2000).duration(1500)
+      .attr("fill-opacity", 1);
+    gene.append("text") // pham name
+      .attr("x", function(d) { return ((d.start + d.stop)/2)/10;})
+      .attr("y", function (d) {
+        if (d.direction == "forward") {
+          if (d.name % 2 === 0) {
+            return -80;
+          }
+          else { return -40;}
+        }
+        else if (d.direction == "reverse") {
+          if (d.name % 2 === 0) {
+            return 80;
+          }
+          else { return 110;}
+        }
+      })
+      .style({"text-anchor": "middle", "fill": "blue"})
+      .attr("font-family", "sans-serif")
+      .text(function(d) {return d.pham})
+      .attr("fill-opacity", 0)
+      .transition().delay(3500).duration(1500)
+      .attr("fill-opacity", 1);
+   
+	var clickBox = d3.select("body").append("div")
+      .attr("class", "clickBox")
+      .style("opacity", 0);
+   
+  });
+  </script>
+</body>
